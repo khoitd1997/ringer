@@ -30,5 +30,6 @@ target_link_libraries(ringer_exe
                       webrtc-${target_name}
                       resample-${target_name}
                       uuid
+                      asound
                       m
                       pthread)
