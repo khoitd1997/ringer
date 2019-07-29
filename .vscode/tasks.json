@@ -12,7 +12,8 @@
         },
         "presentation": {
             "reveal": "always",
-            "panel": "shared"
+            "panel": "dedicated",
+            "clear": true
         }
     }]
 }
