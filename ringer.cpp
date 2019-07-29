@@ -8,10 +8,13 @@
 // #include <pjsua-lib/pjsua.h>
 
 #include <pj/file_access.h>
+#include <pjmedia_audiodev.h>
 #include <iostream>
 #include <pjsua2.hpp>
 
 #define THIS_FILE (strrchr(__FILE__, '/') ? strrchr(__FILE__, '/') + 1 : __FILE__)
+
+const auto testWavFile = "sine_test.wav";
 
 using namespace pj;
 
@@ -115,7 +118,7 @@ void MyCall::onCallMediaState(OnCallMediaStateParam &prm) {
     if (!wav_player) {
         wav_player = new AudioMediaPlayer();
         try {
-            wav_player->createPlayer("input.16.wav", 0);
+            wav_player->createPlayer(testWavFile, 0);
         } catch (...) {
             std::cout << "Failed opening wav file" << std::endl;
             delete wav_player;
@@ -230,7 +233,7 @@ static void mainProg2() {
 }
 
 static void mainProg3(Endpoint &ep) {
-    const char *paths[] = {"input.16.wav"};
+    const char *paths[] = {testWavFile};
     unsigned    i;
     const char *filename = NULL;
 
@@ -246,7 +249,7 @@ static void mainProg3(Endpoint &ep) {
     }
 
     if (!filename) {
-        PJSUA2_RAISE_ERROR3(PJ_ENOTFOUND, "mainProg3()", "Could not locate input.16.wav");
+        PJSUA2_RAISE_ERROR3(PJ_ENOTFOUND, "mainProg3()", "Could not locate sine_test.wav");
     }
 
     // Start library
@@ -271,7 +274,7 @@ static void mainProg3(Endpoint &ep) {
         amp.createPlayer(filename);
 
         AudioMediaRecorder amr;
-        amr.createRecorder("recorder_test_output.wav");
+        amr.createRecorder("./recorder_test_output.wav");
 
         amp.startTransmit(amr);
         if (auddev2.isOpened()) amp.startTransmit(auddev2);
@@ -359,6 +362,7 @@ static void mainProg4(Endpoint &ep) {
 }
 
 int main() {
+    pj_log_set_level(PJ_LOG_MAX_LEVEL);
     int      ret = 0;
     Endpoint ep;
 
