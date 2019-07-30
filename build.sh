@@ -11,4 +11,7 @@ cmake --build .
 cp ${currDir}/wav/sine_test.wav ${currDir}/build/bin
 
 cd ${currDir}/build/bin
-./ringer_exe
+./caller &
+./answerrer
+
+sleep 10000
