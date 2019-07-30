@@ -35,6 +35,10 @@ These are for testing on a Fedora computer
 sudo dnf install -y alsa-lib-devel uuid-devel
 ```
 
+### Inner Working notes
+
+The ```sound.h``` struct has been deperacated in favor of ```https://trac.pjsip.org/repos/wiki/Audio_Dev_API```, the new API is more extensible and allows for better control of the device, this new one is the ```pjmedia-audiodev``` library
+
 ### porting to other OS
 
 people have done it for embedded OS

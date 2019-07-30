@@ -77,12 +77,15 @@ class MyAccount : public Account {
         CallInfo    ci   = call->getInfo();
         CallOpParam prm;
 
-        std::cout << "*** Incoming Call: " << ci.remoteUri << " [" << ci.stateText << "]"
+        std::cout << "*** answerrer Incoming Call: " << ci.remoteUri << " [" << ci.stateText << "]"
                   << std::endl;
 
         calls.push_back(call);
+        prm.opt        = PJSUA_CALL_REINIT_MEDIA | PJSUA_CALL_INCLUDE_DISABLED_MEDIA;
         prm.statusCode = (pjsip_status_code)200;
+        std::cout << "answerring call" << std::endl;
         call->answer(prm);
+        std::cout << "done answerring call" << std::endl;
     }
 };
 
@@ -90,7 +93,8 @@ void MyCall::onCallState(OnCallStateParam &prm) {
     PJ_UNUSED_ARG(prm);
 
     CallInfo ci = getInfo();
-    std::cout << "*** Call: " << ci.remoteUri << " [" << ci.stateText << "]" << std::endl;
+    std::cout << "*** Answerrer Call State: " << ci.remoteUri << " [" << ci.stateText << "]"
+              << std::endl;
 
     if (ci.state == PJSIP_INV_STATE_DISCONNECTED) {
         // myAcc->removeCall(this);
@@ -102,35 +106,51 @@ void MyCall::onCallState(OnCallStateParam &prm) {
 void MyCall::onCallMediaState(OnCallMediaStateParam &prm) {
     PJ_UNUSED_ARG(prm);
 
-    unsigned   i;
-    CallInfo   ci = getInfo();
+    unsigned i;
+    // CallInfo   ci = getInfo();
     AudioMedia aud_med;
-    Endpoint::instance().audDevManager().setPlaybackDev(1);
-    AudioMedia &play_dev_med = Endpoint::instance().audDevManager().getPlaybackDevMedia();
+    Endpoint::instance().audDevManager().setPlaybackDev(14);
+    // Endpoint::instance().audDevManager().setSndDevMode(PJSUA_SND_DEV_SPEAKER_ONLY);
+    auto &play_dev_med = Endpoint::instance().audDevManager().getPlaybackDevMedia();
 
+    pjmedia_aud_dev_index dev_idx;
+    pj_status_t           status;
+    auto                  dev_count = pjmedia_aud_dev_count();
+    printf("Got %d audio devices\n", dev_count);
+    for (dev_idx = 0; dev_idx < dev_count; ++dev_idx) {
+        pjmedia_aud_dev_info info;
+        status = pjmedia_aud_dev_get_info(dev_idx, &info);
+        printf("%d. %s (in=%d, out=%d)\n", dev_idx, info.name, info.input_count, info.output_count);
+    }
+    std::cout << "answerrer Media state change" << std::endl;
     try {
         // Get the first audio media
-        aud_med = getAudioMedia(-1);
+        aud_med            = getAudioMedia(-1);
+        const auto medInfo = aud_med.getPortInfo();
+        std::cout << "med info: " << medInfo.name << " " << medInfo.portId << std::endl;
     } catch (...) {
         std::cout << "Failed to get audio media" << std::endl;
         return;
     }
+    std::cout << "finishing onCallMediaState" << std::endl;
 
-    if (!wav_player) {
-        wav_player = new AudioMediaPlayer();
-        try {
-            wav_player->createPlayer(testWavFile, 0);
-        } catch (...) {
-            std::cout << "Failed opening wav file" << std::endl;
-            delete wav_player;
-            wav_player = NULL;
-        }
-    }
+    // if (!wav_player) {
+    //     wav_player = new AudioMediaPlayer();
+    //     try {
+    //         wav_player->createPlayer(testWavFile, 0);
+    //     } catch (...) {
+    //         std::cout << "Failed opening wav file" << std::endl;
+    //         delete wav_player;
+    //         wav_player = NULL;
+    //     }
+    // }
 
     // This will connect the wav file to the call audio media
-    if (wav_player) wav_player->startTransmit(aud_med);
+    // std::cout << "starting to tx from wav to audio_media" << std::endl;
+    // if (wav_player) wav_player->startTransmit(play_dev_med);
 
     // And this will connect the call audio media to the sound device/speaker
+    // std::cout << "starting to transmit to speaker" << std::endl;
     aud_med.startTransmit(play_dev_med);
 }
 
@@ -142,51 +162,6 @@ void MyCall::onCallTransferRequest(OnCallTransferRequestParam &prm) {
 void MyCall::onCallReplaced(OnCallReplacedParam &prm) {
     /* Create new Call for call replace */
     prm.newCall = new MyCall(*myAcc, prm.newCallId);
-}
-
-static void mainProg1(Endpoint &ep) {
-    // Init library
-    EpConfig ep_cfg;
-    ep_cfg.logConfig.level = 4;
-    ep.libInit(ep_cfg);
-
-    // Transport
-    TransportConfig tcfg;
-    tcfg.port = 5060;
-    ep.transportCreate(PJSIP_TRANSPORT_UDP, tcfg);
-
-    // Start library
-    ep.libStart();
-    std::cout << "*** PJSUA2 STARTED ***" << std::endl;
-
-    // Add account
-    AccountConfig acc_cfg;
-    acc_cfg.idUri                  = "sip:test1@pjsip.org";
-    acc_cfg.regConfig.registrarUri = "sip:sip.pjsip.org";
-    acc_cfg.sipConfig.authCreds.push_back(AuthCredInfo("digest", "*", "test1", 0, "test1"));
-    MyAccount *acc(new MyAccount);
-    try {
-        acc->create(acc_cfg);
-    } catch (...) { std::cout << "Adding account failed" << std::endl; }
-
-    pj_thread_sleep(2000);
-
-    // Make outgoing call
-    Call *call = new MyCall(*acc);
-    acc->calls.push_back(call);
-    CallOpParam prm(true);
-    prm.opt.audioCount = 1;
-    prm.opt.videoCount = 0;
-    call->makeCall("sip:test1@pjsip.org", prm);
-
-    // Hangup all calls
-    pj_thread_sleep(4000);
-    ep.hangupAllCalls();
-    pj_thread_sleep(4000);
-
-    // Destroy library
-    std::cout << "*** PJSUA2 SHUTTING DOWN ***" << std::endl;
-    delete acc; /* Will delete all calls too */
 }
 
 static void mainProg3(Endpoint &ep) {
@@ -217,7 +192,7 @@ static void mainProg3(Endpoint &ep) {
      * media clock (see also https://trac.pjsip.org/repos/wiki/FAQ#tx-timing)
      * especially when sound device clock is jittery.
      */
-    ep.audDevManager().setNullDev();
+    // ep.audDevManager().setNullDev();
 
     /* And install sound device using Extra Audio Device */
     ExtraAudioDevice auddev2(-1, -1);
@@ -302,46 +277,36 @@ int main() {
 
         // Transport
         TransportConfig tcfg;
-        tcfg.port = 5060;
+        tcfg.port          = 5060;
+        tcfg.publicAddress = "localhost";
         ep.transportCreate(PJSIP_TRANSPORT_UDP, tcfg);
 
         // Start library
         ep.libStart();
-        ep.audDevManager().setNullDev();
+        // ep.audDevManager().setNullDev();
         std::cout << "*** PJSUA2 STARTED ***" << std::endl;
 
         // Add account
         AccountConfig acc_cfg;
-        acc_cfg.idUri                  = "sip:test1@pjsip.org";
+        // acc_cfg.idUri                  = "sip:test2@pjsip.org";
+        acc_cfg.idUri                  = "sip:test2@localhost";
         acc_cfg.regConfig.registrarUri = "sip:sip.pjsip.org";
-        acc_cfg.sipConfig.authCreds.push_back(AuthCredInfo("digest", "*", "test1", 0, "test1"));
+        acc_cfg.sipConfig.authCreds.push_back(AuthCredInfo("digest", "*", "test2", 0, "test2"));
         MyAccount *acc(new MyAccount);
         try {
             acc->create(acc_cfg);
         } catch (...) { std::cout << "Adding account failed" << std::endl; }
 
-        pj_thread_sleep(2000);
-
-        // Make outgoing call
-        Call *call = new MyCall(*acc);
-        acc->calls.push_back(call);
-        CallOpParam prm(true);
-        prm.opt.audioCount = 1;
-        prm.opt.videoCount = 0;
-        call->makeCall("sip:test1@pjsip.org", prm);
-
-        // AudioMediaRecorder amr;
-        // amr.createRecorder("./recorder_test_output.wav");
+        std::cout << "*** Answerrer Waiting ***" << std::endl;
+        // while (1) {}
 
         // Hangup all calls
-        std::cout << "*** SAY SOMETHING ***" << std::endl;
-        pj_thread_sleep(2000);
+        pj_thread_sleep(10000);
         // AudioMediaPlayer amp;
         // amp.createPlayer(testWavFile);
         // amp.startTransmit(call->getAudioMedia(-1));
-        pj_thread_sleep(2000);
 
-        std::cout << "*** HANGING UP NOW ***" << std::endl;
+        std::cout << "*** Answerrer hanging up ***" << std::endl;
         ep.hangupAllCalls();
         pj_thread_sleep(2000);
 
@@ -356,7 +321,7 @@ int main() {
         std::cout << "Success" << std::endl;
         return 0;
     } catch (Error &err) {
-        std::cout << "Error Found" << std::endl;
+        std::cout << "Answerrer Error Found" << std::endl;
         std::cout << "Exception: " << err.info() << std::endl;
         return 1;
     }

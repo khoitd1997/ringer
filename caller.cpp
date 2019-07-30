@@ -77,7 +77,7 @@ class MyAccount : public Account {
         CallInfo    ci   = call->getInfo();
         CallOpParam prm;
 
-        std::cout << "*** Incoming Call: " << ci.remoteUri << " [" << ci.stateText << "]"
+        std::cout << "*** caller Incoming Call: " << ci.remoteUri << " [" << ci.stateText << "]"
                   << std::endl;
 
         calls.push_back(call);
@@ -90,24 +90,34 @@ void MyCall::onCallState(OnCallStateParam &prm) {
     PJ_UNUSED_ARG(prm);
 
     CallInfo ci = getInfo();
-    std::cout << "*** Call: " << ci.remoteUri << " [" << ci.stateText << "]" << std::endl;
+    std::cout << "*** Caller Call: " << ci.remoteUri << " [" << ci.stateText << "]" << std::endl;
 
     if (ci.state == PJSIP_INV_STATE_DISCONNECTED) {
         // myAcc->removeCall(this);
         /* Delete the call */
         // delete this;
     }
+    std::cout << "*** Finnish Caller Call State" << std::endl;
 }
 
 void MyCall::onCallMediaState(OnCallMediaStateParam &prm) {
+    std::cout << "Caller Media state change" << std::endl;
     PJ_UNUSED_ARG(prm);
 
-    unsigned   i;
-    CallInfo   ci = getInfo();
-    AudioMedia aud_med;
-    Endpoint::instance().audDevManager().setPlaybackDev(1);
-    AudioMedia &play_dev_med = Endpoint::instance().audDevManager().getPlaybackDevMedia();
+    unsigned i;
+    CallInfo ci = getInfo();
+    Endpoint::instance().audDevManager().setCaptureDev(-1);
+    auto &captureDev = Endpoint::instance().audDevManager().getCaptureDevMedia();
 
+    //     auto             callerMedia = call->getAudioMedia(-1);
+    // AudioMediaPlayer callerPlayer;
+    // try {
+    //     callerPlayer.createPlayer(testWavFile, 0);
+    // } catch (...) { std::cout << "Failed opening caller wav file" << std::endl; }
+    // callerPlayer.startTransmit(callerMedia);
+    // std::cout << "*** SAY SOMETHING ***" << std::endl;
+
+    AudioMedia aud_med;
     try {
         // Get the first audio media
         aud_med = getAudioMedia(-1);
@@ -128,13 +138,19 @@ void MyCall::onCallMediaState(OnCallMediaStateParam &prm) {
     }
 
     // This will connect the wav file to the call audio media
-    if (wav_player) wav_player->startTransmit(aud_med);
+    // AudioMediaRecorder amr;
+    // amr.createRecorder("./answerrer.wav");
+    // aud_med.startTransmit(amr);
+    // if (wav_player) wav_player->startTransmit(aud_med);
 
-    // And this will connect the call audio media to the sound device/speaker
-    aud_med.startTransmit(play_dev_med);
+    wav_player->startTransmit(aud_med);
+
+    std::cout << "Say something NOW" << std::endl;
+    pj_thread_sleep(60000);
 }
 
 void MyCall::onCallTransferRequest(OnCallTransferRequestParam &prm) {
+    std::cout << "Caller tx req" << std::endl;
     /* Create new Call for call transfer */
     prm.newCall = new MyCall(*myAcc);
 }
@@ -142,51 +158,6 @@ void MyCall::onCallTransferRequest(OnCallTransferRequestParam &prm) {
 void MyCall::onCallReplaced(OnCallReplacedParam &prm) {
     /* Create new Call for call replace */
     prm.newCall = new MyCall(*myAcc, prm.newCallId);
-}
-
-static void mainProg1(Endpoint &ep) {
-    // Init library
-    EpConfig ep_cfg;
-    ep_cfg.logConfig.level = 4;
-    ep.libInit(ep_cfg);
-
-    // Transport
-    TransportConfig tcfg;
-    tcfg.port = 5060;
-    ep.transportCreate(PJSIP_TRANSPORT_UDP, tcfg);
-
-    // Start library
-    ep.libStart();
-    std::cout << "*** PJSUA2 STARTED ***" << std::endl;
-
-    // Add account
-    AccountConfig acc_cfg;
-    acc_cfg.idUri                  = "sip:test1@pjsip.org";
-    acc_cfg.regConfig.registrarUri = "sip:sip.pjsip.org";
-    acc_cfg.sipConfig.authCreds.push_back(AuthCredInfo("digest", "*", "test1", 0, "test1"));
-    MyAccount *acc(new MyAccount);
-    try {
-        acc->create(acc_cfg);
-    } catch (...) { std::cout << "Adding account failed" << std::endl; }
-
-    pj_thread_sleep(2000);
-
-    // Make outgoing call
-    Call *call = new MyCall(*acc);
-    acc->calls.push_back(call);
-    CallOpParam prm(true);
-    prm.opt.audioCount = 1;
-    prm.opt.videoCount = 0;
-    call->makeCall("sip:test1@pjsip.org", prm);
-
-    // Hangup all calls
-    pj_thread_sleep(4000);
-    ep.hangupAllCalls();
-    pj_thread_sleep(4000);
-
-    // Destroy library
-    std::cout << "*** PJSUA2 SHUTTING DOWN ***" << std::endl;
-    delete acc; /* Will delete all calls too */
 }
 
 static void mainProg3(Endpoint &ep) {
@@ -297,21 +268,24 @@ int main() {
 
         // Init library
         EpConfig ep_cfg;
+        // ep_cfg.logConfig.level = 5;
         ep_cfg.logConfig.level = 2;
         ep.libInit(ep_cfg);
 
         // Transport
         TransportConfig tcfg;
-        tcfg.port = 5060;
+        tcfg.port          = 5061;
+        tcfg.publicAddress = "localhost";
         ep.transportCreate(PJSIP_TRANSPORT_UDP, tcfg);
 
         // Start library
         ep.libStart();
-        ep.audDevManager().setNullDev();
+        // ep.audDevManager().setNullDev();
         std::cout << "*** PJSUA2 STARTED ***" << std::endl;
 
         // Add account
         AccountConfig acc_cfg;
+        // acc_cfg.idUri                  = "sip:test1@pjsip.org";
         acc_cfg.idUri                  = "sip:test1@pjsip.org";
         acc_cfg.regConfig.registrarUri = "sip:sip.pjsip.org";
         acc_cfg.sipConfig.authCreds.push_back(AuthCredInfo("digest", "*", "test1", 0, "test1"));
@@ -328,14 +302,16 @@ int main() {
         CallOpParam prm(true);
         prm.opt.audioCount = 1;
         prm.opt.videoCount = 0;
-        call->makeCall("sip:test1@pjsip.org", prm);
+        // sip:178237@192.168.10.10:5090
+        // 162.194.129.207:5060
+        call->makeCall("sip:test2@localhost:5060", prm);
 
         // AudioMediaRecorder amr;
         // amr.createRecorder("./recorder_test_output.wav");
 
         // Hangup all calls
-        std::cout << "*** SAY SOMETHING ***" << std::endl;
-        pj_thread_sleep(2000);
+
+        pj_thread_sleep(6000);
         // AudioMediaPlayer amp;
         // amp.createPlayer(testWavFile);
         // amp.startTransmit(call->getAudioMedia(-1));
