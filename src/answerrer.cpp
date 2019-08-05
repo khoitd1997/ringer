@@ -13,26 +13,14 @@
 #include <pjsua2.hpp>
 
 #include "ringer_account.hpp"
+#include "ringer_endpoint.hpp"
 #include "ringer_logger.hpp"
 
 int main() {
     try {
-        pj::Endpoint ep;
-        ep.libCreate();
+        auto ep  = ringer::RingerEndpoint::getInstance(5060, "localhost");
+        auto ep2 = ringer::RingerEndpoint::getInstance(12321, "jklas");
 
-        // Init library
-        pj::EpConfig ep_cfg;
-        ep_cfg.logConfig.level = 2;
-        ep.libInit(ep_cfg);
-
-        // Transport
-        pj::TransportConfig tcfg;
-        tcfg.port          = 5060;
-        tcfg.publicAddress = "localhost";
-        ep.transportCreate(PJSIP_TRANSPORT_UDP, tcfg);
-
-        // Start library
-        ep.libStart();
         // ep.audDevManager().setNullDev();
         std::cout << "*** PJSUA2 STARTED ***" << std::endl;
 
@@ -47,14 +35,6 @@ int main() {
         // amp.startTransmit(call->getAudioMedia(-1));
 
         ringer::logger::info("*** Answerrer hanging up ***");
-        ep.hangupAllCalls();
-        pj_thread_sleep(2000);
-
-        // amp.startTransmit(amr);
-        // if (auddev2.isOpened()) amp.startTransmit(auddev2);
-
-        ep.libDestroy();
-        std::cout << "Success" << std::endl;
         return 0;
     } catch (pj::Error &err) {
         std::cout << "Answerrer Error Found" << std::endl;

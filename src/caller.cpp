@@ -14,27 +14,14 @@
 
 #include "ringer_account.hpp"
 #include "ringer_call.hpp"
+#include "ringer_endpoint.hpp"
 #include "ringer_logger.hpp"
 
 int main() {
     try {
-        pj::Endpoint ep;
-        ep.libCreate();
+        auto ep = ringer::RingerEndpoint::getInstance(5061, "localhost");
+        ep->hangupAllCalls();
 
-        // Init library
-        pj::EpConfig ep_cfg;
-        // ep_cfg.logConfig.level = 5;
-        ep_cfg.logConfig.level = 2;
-        ep.libInit(ep_cfg);
-
-        // Transport
-        pj::TransportConfig tcfg;
-        tcfg.port          = 5061;
-        tcfg.publicAddress = "localhost";
-        ep.transportCreate(PJSIP_TRANSPORT_UDP, tcfg);
-
-        // Start library
-        ep.libStart();
         // ep.audDevManager().setNullDev();
         std::cout << "*** PJSUA2 STARTED ***" << std::endl;
 
@@ -50,8 +37,6 @@ int main() {
         pj::CallOpParam prm(true);
         prm.opt.audioCount = 1;
         prm.opt.videoCount = 0;
-        // sip:178237@192.168.10.10:5090
-        // 162.194.129.207:5060
         call->makeCall("sip:test2@localhost:5060", prm);
 
         // AudioMediaRecorder amr;
@@ -65,17 +50,12 @@ int main() {
         // amp.startTransmit(call->getAudioMedia(-1));
         pj_thread_sleep(2000);
 
-        std::cout << "*** HANGING UP NOW ***" << std::endl;
-        ep.hangupAllCalls();
-        pj_thread_sleep(2000);
-
         // amp.startTransmit(amr);
         // if (auddev2.isOpened()) amp.startTransmit(auddev2);
 
         // Destroy library
         std::cout << "*** PJSUA2 SHUTTING DOWN ***" << std::endl;
 
-        ep.libDestroy();
         std::cout << "Success" << std::endl;
         return 0;
     } catch (pj::Error &err) {
