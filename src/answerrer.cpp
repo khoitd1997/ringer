@@ -125,7 +125,7 @@ void MyCall::onCallMediaState(OnCallMediaStateParam &prm) {
     std::cout << "answerrer Media state change" << std::endl;
     try {
         // Get the first audio media
-        aud_med            = getAudioMedia(-1);
+        aud_med            = this->getAudioMedia(-1);
         const auto medInfo = aud_med.getPortInfo();
         std::cout << "med info: " << medInfo.name << " " << medInfo.portId << std::endl;
     } catch (...) {
