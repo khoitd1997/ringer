@@ -1,0 +1,3 @@
+add_library(ringer_account ringer_account.cpp)
+target_include_directories(ringer_account PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+target_link_libraries(ringer_account PRIVATE ringer_logger ringer_call)

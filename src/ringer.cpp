@@ -18,20 +18,20 @@ const auto testWavFile = "sine_test.wav";
 
 using namespace pj;
 
-class MyAccount;
+class RingerAccount;
 
-class MyCall : public Call {
+class RingerCall : public Call {
    private:
-    MyAccount *       myAcc;
+    RingerAccount *   myAcc;
     AudioMediaPlayer *wav_player;
 
    public:
-    MyCall(Account &acc, int call_id = PJSUA_INVALID_ID) : Call(acc, call_id) {
+    RingerCall(Account &acc, int call_id = PJSUA_INVALID_ID) : Call(acc, call_id) {
         wav_player = NULL;
-        myAcc      = (MyAccount *)&acc;
+        myAcc      = (RingerAccount *)&acc;
     }
 
-    ~MyCall() {
+    ~RingerCall() {
         if (wav_player) delete wav_player;
     }
 
@@ -41,14 +41,14 @@ class MyCall : public Call {
     virtual void onCallMediaState(OnCallMediaStateParam &prm);
 };
 
-class MyAccount : public Account {
+class RingerAccount : public Account {
    public:
     std::vector<Call *> calls;
 
    public:
-    MyAccount() {}
+    RingerAccount() {}
 
-    ~MyAccount() {
+    ~RingerAccount() {
         std::cout << "*** Account is being deleted: No of calls=" << calls.size() << std::endl;
 
         for (std::vector<Call *>::iterator it = calls.begin(); it != calls.end();) {
@@ -73,7 +73,7 @@ class MyAccount : public Account {
     }
 
     virtual void onIncomingCall(OnIncomingCallParam &iprm) {
-        Call *      call = new MyCall(*this, iprm.callId);
+        Call *      call = new RingerCall(*this, iprm.callId);
         CallInfo    ci   = call->getInfo();
         CallOpParam prm;
 
@@ -86,7 +86,7 @@ class MyAccount : public Account {
     }
 };
 
-void MyCall::onCallState(OnCallStateParam &prm) {
+void RingerCall::onCallState(OnCallStateParam &prm) {
     PJ_UNUSED_ARG(prm);
 
     CallInfo ci = getInfo();
@@ -99,7 +99,7 @@ void MyCall::onCallState(OnCallStateParam &prm) {
     }
 }
 
-void MyCall::onCallMediaState(OnCallMediaStateParam &prm) {
+void RingerCall::onCallMediaState(OnCallMediaStateParam &prm) {
     PJ_UNUSED_ARG(prm);
 
     unsigned   i;
@@ -134,14 +134,14 @@ void MyCall::onCallMediaState(OnCallMediaStateParam &prm) {
     aud_med.startTransmit(play_dev_med);
 }
 
-void MyCall::onCallTransferRequest(OnCallTransferRequestParam &prm) {
+void RingerCall::onCallTransferRequest(OnCallTransferRequestParam &prm) {
     /* Create new Call for call transfer */
-    prm.newCall = new MyCall(*myAcc);
+    prm.newCall = new RingerCall(*myAcc);
 }
 
-void MyCall::onCallReplaced(OnCallReplacedParam &prm) {
+void RingerCall::onCallReplaced(OnCallReplacedParam &prm) {
     /* Create new Call for call replace */
-    prm.newCall = new MyCall(*myAcc, prm.newCallId);
+    prm.newCall = new RingerCall(*myAcc, prm.newCallId);
 }
 
 static void mainProg1(Endpoint &ep) {
@@ -163,8 +163,8 @@ static void mainProg1(Endpoint &ep) {
     AccountConfig acc_cfg;
     acc_cfg.idUri                  = "sip:test1@pjsip.org";
     acc_cfg.regConfig.registrarUri = "sip:sip.pjsip.org";
-    acc_cfg.sipConfig.authCreds.push_back(AuthCredInfo("digest", "*", "test1", 0, "test1"));
-    MyAccount *acc(new MyAccount);
+    acc_cfg.sipConfig.authCreds.push_back(pj::AuthCredInfoInfo("digest", "*", "test1", 0, "test1"));
+    RingerAccount *acc(new RingerAccount);
     try {
         acc->create(acc_cfg);
     } catch (...) { std::cout << "Adding account failed" << std::endl; }
@@ -172,7 +172,7 @@ static void mainProg1(Endpoint &ep) {
     pj_thread_sleep(2000);
 
     // Make outgoing call
-    Call *call = new MyCall(*acc);
+    Call *call = new RingerCall(*acc);
     acc->calls.push_back(call);
     CallOpParam prm(true);
     prm.opt.audioCount = 1;
@@ -261,7 +261,7 @@ static void mainProg() {
         accCfg.mediaConfig.transportConfig.tlsConfig.ciphers.push_back(2);
         accCfg.mediaConfig.transportConfig.tlsConfig.ciphers.push_back(3);
 
-        AuthCredInfo aci;
+        pj::AuthCredInfoInfo aci;
         aci.scheme   = "digest";
         aci.username = "test";
         aci.data     = "passwd";
@@ -314,8 +314,9 @@ int main() {
         AccountConfig acc_cfg;
         acc_cfg.idUri                  = "sip:test1@pjsip.org";
         acc_cfg.regConfig.registrarUri = "sip:sip.pjsip.org";
-        acc_cfg.sipConfig.authCreds.push_back(AuthCredInfo("digest", "*", "test1", 0, "test1"));
-        MyAccount *acc(new MyAccount);
+        acc_cfg.sipConfig.authCreds.push_back(
+            pj::AuthCredInfoInfo("digest", "*", "test1", 0, "test1"));
+        RingerAccount *acc(new RingerAccount);
         try {
             acc->create(acc_cfg);
         } catch (...) { std::cout << "Adding account failed" << std::endl; }
@@ -323,7 +324,7 @@ int main() {
         pj_thread_sleep(2000);
 
         // Make outgoing call
-        Call *call = new MyCall(*acc);
+        Call *call = new RingerCall(*acc);
         acc->calls.push_back(call);
         CallOpParam prm(true);
         prm.opt.audioCount = 1;

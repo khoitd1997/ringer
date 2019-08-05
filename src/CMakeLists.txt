@@ -33,6 +33,13 @@ link_libraries(pjsua2-${target_name}
                m
                pthread)
 
-# add_executable(ringer_exe ringer.cpp)
+add_subdirectory(logger)
+add_subdirectory(pjsip_util)
+add_subdirectory(account)
+add_subdirectory(call)
+
 add_executable(caller caller.cpp)
+target_link_libraries(caller PRIVATE ringer_logger ringer_account ringer_call)
+
 add_executable(answerrer answerrer.cpp)
+target_link_libraries(answerrer PRIVATE ringer_logger ringer_account)
