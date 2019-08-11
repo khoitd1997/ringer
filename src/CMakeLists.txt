@@ -19,7 +19,6 @@ link_libraries(pjsua2-${target_name}
                pjmedia-${target_name}
                pjmedia-codec-${target_name}
                pjmedia-audiodev-${target_name}
-               pjlib-util-${target_name}
                pj-${target_name}
                pjnath-${target_name}
                gsmcodec-${target_name}
@@ -28,6 +27,7 @@ link_libraries(pjsua2-${target_name}
                srtp-${target_name}
                webrtc-${target_name}
                resample-${target_name}
+               pjlib-util-${target_name}
                uuid
                asound
                m

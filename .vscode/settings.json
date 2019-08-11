@@ -65,6 +65,10 @@
         "regex": "cpp",
         "shared_mutex": "cpp",
         "thread": "cpp",
-        "algorithm": "cpp"
+        "algorithm": "cpp",
+        "iterator": "cpp",
+        "numeric": "cpp",
+        "random": "cpp",
+        "new": "cpp"
     }
 }

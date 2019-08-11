@@ -12,7 +12,6 @@ cmake --build .
 cp ${currDir}/wav/sine_test.wav ${srcDir}/build/bin
 
 cd ${srcDir}/build/bin
-./caller &
-./answerrer
-
-sleep 10000
+# ./answerrer > /dev/null 2>&1 &
+./answerrer &
+./caller

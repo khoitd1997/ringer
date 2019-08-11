@@ -72,7 +72,7 @@ void RingerCall::onCallMediaState(pj::OnCallMediaStateParam &prm) {
 
         logger::info(roleName_, "say something NOW");
 
-        pj_thread_sleep(60000);
+        pj_thread_sleep(30000);
     } else {
         audMed.startTransmit(pj::Endpoint::instance().audDevManager().getPlaybackDevMedia());
     }

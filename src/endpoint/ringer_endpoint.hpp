@@ -13,6 +13,9 @@ class RingerEndpoint {
     pj::Endpoint* operator->();
 
    private:
+    RingerEndpoint(const RingerEndpoint&) = delete;
+    RingerEndpoint& operator=(const RingerEndpoint&) = delete;
+
     RingerEndpoint(const int port, const std::string& publicAddr);
 
     pj::Endpoint ep_;

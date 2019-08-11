@@ -18,16 +18,12 @@
 #include "ringer_logger.hpp"
 
 int main() {
+    auto &ep = ringer::RingerEndpoint::getInstance(5061, "localhost");
     try {
-        auto ep = ringer::RingerEndpoint::getInstance(5061, "localhost");
-        ep->hangupAllCalls();
-
-        // ep.audDevManager().setNullDev();
-        std::cout << "*** PJSUA2 STARTED ***" << std::endl;
+        ringer::logger::info("caller started");
 
         // Add account
-        ringer::RingerAccount acc{"test1", "pjsip.org"};
-
+        ringer::RingerAccount acc{"caller", "pjsip.org"};
         pj_thread_sleep(2000);
 
         // Make outgoing call
@@ -37,30 +33,26 @@ int main() {
         pj::CallOpParam prm(true);
         prm.opt.audioCount = 1;
         prm.opt.videoCount = 0;
-        call->makeCall("sip:test2@localhost:5060", prm);
+        call->makeCall("sip:answerrer@localhost:5060", prm);
 
         // AudioMediaRecorder amr;
         // amr.createRecorder("./recorder_test_output.wav");
 
-        // Hangup all calls
-
-        pj_thread_sleep(6000);
+        pj_thread_sleep(33000);
         // AudioMediaPlayer amp;
         // amp.createPlayer(testWavFile);
         // amp.startTransmit(call->getAudioMedia(-1));
-        pj_thread_sleep(2000);
 
         // amp.startTransmit(amr);
         // if (auddev2.isOpened()) amp.startTransmit(auddev2);
 
         // Destroy library
-        std::cout << "*** PJSUA2 SHUTTING DOWN ***" << std::endl;
 
-        std::cout << "Success" << std::endl;
-        return 0;
+        std::cout << "Caller exitting" << std::endl;
     } catch (pj::Error &err) {
         std::cout << "Error Found" << std::endl;
         std::cout << "Exception: " << err.info() << std::endl;
         return 1;
     }
+    return 0;
 }

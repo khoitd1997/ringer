@@ -15,8 +15,7 @@ RingerAccount::RingerAccount(const std::string &name, const std::string &address
     pj::AccountConfig accConfig;
     accConfig.idUri                  = "sip:" + name + "@" + address;
     accConfig.regConfig.registrarUri = "sip:sip.pjsip.org";
-    accConfig.sipConfig.authCreds.push_back(
-        pj::AuthCredInfo("digest", "*", name.c_str(), 0, name.c_str()));
+    accConfig.sipConfig.authCreds.push_back(pj::AuthCredInfo("digest", "*", name, 0, name));
 
     try {
         this->create(accConfig);

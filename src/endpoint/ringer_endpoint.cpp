@@ -1,7 +1,6 @@
 #include "ringer_endpoint.hpp"
 
 namespace ringer {
-// TODO(kd): Do forwarding here
 RingerEndpoint& RingerEndpoint::getInstance(const int port, const std::string& publicAddr) {
     static RingerEndpoint singleTon{port, publicAddr};
     return singleTon;
@@ -27,7 +26,7 @@ RingerEndpoint::RingerEndpoint(const int port, const std::string& publicAddr) {
 
 RingerEndpoint::~RingerEndpoint() {
     ep_.hangupAllCalls();
-    pj_thread_sleep(1000);
+    pj_thread_sleep(2000);
     ep_.libDestroy();
 }
 }  // namespace ringer

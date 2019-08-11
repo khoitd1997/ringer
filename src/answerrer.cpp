@@ -18,27 +18,25 @@
 
 int main() {
     try {
-        auto ep  = ringer::RingerEndpoint::getInstance(5060, "localhost");
-        auto ep2 = ringer::RingerEndpoint::getInstance(12321, "jklas");
+        auto& ep = ringer::RingerEndpoint::getInstance(5060, "localhost");
 
-        // ep.audDevManager().setNullDev();
-        std::cout << "*** PJSUA2 STARTED ***" << std::endl;
+        ringer::logger::info("answerrer started");
 
-        // Add account
-        ringer::RingerAccount acc{"test2", "localhost"};
+        ringer::RingerAccount acc{"answerrer", "localhost"};
         ringer::logger::info("*** Answerrer Waiting ***");
 
-        // Hangup all calls
         pj_thread_sleep(10000);
+        ringer::logger::info("*** Answerrer hanging up ***");
+        ringer::logger::info("*** Answerrer exitting***");
         // AudioMediaPlayer amp;
         // amp.createPlayer(testWavFile);
         // amp.startTransmit(call->getAudioMedia(-1));
-
-        ringer::logger::info("*** Answerrer hanging up ***");
-        return 0;
-    } catch (pj::Error &err) {
+        ep->hangupAllCalls();
+        pj_thread_sleep(70000);
+    } catch (pj::Error& err) {
         std::cout << "Answerrer Error Found" << std::endl;
         std::cout << "Exception: " << err.info() << std::endl;
         return 1;
     }
+    return 0;
 }
