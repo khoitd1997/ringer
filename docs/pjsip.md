@@ -10,6 +10,8 @@
 
 [SIP protocol](https://tools.ietf.org/html/rfc3261#section-16.4)
 
+[mDNS from esp32](https://docs.espressif.com/projects/esp-idf/en/latest/api-reference/protocols/mdns.html)
+
 ## Design
 
 Since the location of the exact user is determined dynamically, the address isn't fixed. Have the client do a DNS lookup on where the user is and then call that number. When user moves to different room, do a call transfer(reference link above)
@@ -23,9 +25,17 @@ Since the location of the exact user is determined dynamically, the address isn'
 
 ## Customize Routing
 
-The step that would allow customization of routing is during the [Target Determination](https://tools.ietf.org/html/rfc3261#section-16.5), the ```Location Service``` defined in the paper is the thing that we can customize. In the ```stateless_proxy.c``` example provided by pjsip, the customized part if left emtpy in ```proxy.h```, although the ```proxy_postprocess``` function is a good example of how to set the target.
+The step that would allow customization of routing is during the [Target Determination](https://tools.ietf.org/html/rfc3261#section-16.5), the ```Location Service``` defined in the paper is the thing that we can customize. In the ```stateless_proxy.c``` example provided by pjsip, the customized part is left emtpy in ```proxy.h```, although the ```proxy_postprocess``` function is a good example of how to set the target.
 
 Use the ```DHCP hostname``` of devices to identify them(some devices may not support them but the esp32 does)
+
+### Outbound Proxies
+
+This is probably the easiest since there is already an example for it, when bootstrapping, the client will already get the IP/hostname of the server.
+
+### Local DNS server
+
+Local DNS server might be difficult because not all routers support. However, we can configure the server to run a DNS server with fixed IP address and only ringer clients will use it(might need to recompile lib to enable hostname resolution).
 
 ## Dependencies
 

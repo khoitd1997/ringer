@@ -10,3 +10,4 @@ voice-over-ip local phone system. Speak the person name and it will call the nea
 - Easy setup
 - Secured through encryptions
 - Private by never letting the information leave the local network
+- Group call
