@@ -36,7 +36,7 @@ static pj_status_t init_stateless_proxy(void) {
     pj_status_t status;
 
     /* Register our module to receive incoming requests. */
-    status = pjsip_endpt_register_module(global.endpt, &mod_stateless_proxy);
+    status = pjsip_endpt_register_module(ringer::global.endpt, &mod_stateless_proxy);
     PJ_ASSERT_RETURN(status == PJ_SUCCESS, 1);
 
     return PJ_SUCCESS;
@@ -48,40 +48,40 @@ static pj_bool_t on_rx_request(pjsip_rx_data *rdata) {
     pj_status_t    status;
 
     /* Verify incoming request */
-    status = proxy_verify_request(rdata);
+    status = ringer::proxy_verify_request(rdata);
     if (status != PJ_SUCCESS) {
-        app_perror("RX invalid request", status);
+        ringer::app_perror("RX invalid request", status);
         return PJ_TRUE;
     }
 
     /*
      * Request looks sane, next clone the request to create transmit data.
      */
-    status = pjsip_endpt_create_request_fwd(global.endpt, rdata, NULL, NULL, 0, &tdata);
+    status = pjsip_endpt_create_request_fwd(ringer::global.endpt, rdata, NULL, NULL, 0, &tdata);
     if (status != PJ_SUCCESS) {
         pjsip_endpt_respond_stateless(
-            global.endpt, rdata, PJSIP_SC_INTERNAL_SERVER_ERROR, NULL, NULL, NULL);
+            ringer::global.endpt, rdata, PJSIP_SC_INTERNAL_SERVER_ERROR, NULL, NULL, NULL);
         return PJ_TRUE;
     }
 
     /* Process routing */
-    status = proxy_process_routing(tdata);
+    status = ringer::proxy_process_routing(tdata);
     if (status != PJ_SUCCESS) {
-        app_perror("Error processing route", status);
+        ringer::app_perror("Error processing route", status);
         return PJ_TRUE;
     }
 
     /* Calculate target */
-    status = proxy_calculate_target(rdata, tdata);
+    status = ringer::proxy_calculate_target(rdata, tdata);
     if (status != PJ_SUCCESS) {
-        app_perror("Error calculating target", status);
+        ringer::app_perror("Error calculating target", status);
         return PJ_TRUE;
     }
 
     /* Target is set, forward the request */
-    status = pjsip_endpt_send_request_stateless(global.endpt, tdata, NULL, NULL);
+    status = pjsip_endpt_send_request_stateless(ringer::global.endpt, tdata, NULL, NULL);
     if (status != PJ_SUCCESS) {
-        app_perror("Error forwarding request", status);
+        ringer::app_perror("Error forwarding request", status);
         return PJ_TRUE;
     }
 
@@ -96,9 +96,9 @@ static pj_bool_t on_rx_response(pjsip_rx_data *rdata) {
     pj_status_t         status;
 
     /* Create response to be forwarded upstream (Via will be stripped here) */
-    status = pjsip_endpt_create_response_fwd(global.endpt, rdata, 0, &tdata);
+    status = pjsip_endpt_create_response_fwd(ringer::global.endpt, rdata, 0, &tdata);
     if (status != PJ_SUCCESS) {
-        app_perror("Error creating response", status);
+        ringer::app_perror("Error creating response", status);
         return PJ_TRUE;
     }
 
@@ -134,9 +134,9 @@ static pj_bool_t on_rx_response(pjsip_rx_data *rdata) {
     }
 
     /* Forward response */
-    status = pjsip_endpt_send_response(global.endpt, &res_addr, tdata, NULL, NULL);
+    status = pjsip_endpt_send_response(ringer::global.endpt, &res_addr, tdata, NULL, NULL);
     if (status != PJ_SUCCESS) {
-        app_perror("Error forwarding response", status);
+        ringer::app_perror("Error forwarding response", status);
         return PJ_TRUE;
     }
 
@@ -150,34 +150,35 @@ int main(int argc, char *argv[]) {
     ringer::logger::init("server");
     pj_status_t status;
 
-    global.port = 5060;
+    ringer::global.port = 5060;
     pj_log_set_level(4);
 
-    status = init_options(argc, argv);
+    status = ringer::init_options(argc, argv);
     if (status != PJ_SUCCESS) return 1;
 
-    status = init_stack();
+    status = ringer::init_stack();
     if (status != PJ_SUCCESS) {
-        app_perror("Error initializing stack", status);
+        ringer::app_perror("Error initializing stack", status);
         return 1;
     }
 
-    status = init_proxy();
+    status = ringer::init_proxy();
     if (status != PJ_SUCCESS) {
-        app_perror("Error initializing proxy", status);
+        ringer::app_perror("Error initializing proxy", status);
         return 1;
     }
 
     status = init_stateless_proxy();
     if (status != PJ_SUCCESS) {
-        app_perror("Error initializing stateless proxy", status);
+        ringer::app_perror("Error initializing stateless proxy", status);
         return 1;
     }
 
 #if PJ_HAS_THREADS
-    status = pj_thread_create(global.pool, "sproxy", &worker_thread, NULL, 0, 0, &global.thread);
+    status = pj_thread_create(
+        ringer::global.pool, "sproxy", &ringer::worker_thread, NULL, 0, 0, &ringer::global.thread);
     if (status != PJ_SUCCESS) {
-        app_perror("Error creating thread", status);
+        ringer::app_perror("Error creating thread", status);
         return 1;
     }
 
@@ -187,28 +188,25 @@ int main(int argc, char *argv[]) {
 
     const auto before = clock::now();
 
-    while (!global.quit_flag) {
+    while (!ringer::global.quit_flag) {
         char line[10];
 
         const auto dur =
             (std::chrono::duration_cast<std::chrono::seconds>(clock::now() - before)).count();
-        if (dur > 1000) {
-            ringer::logger::info("quit flag true");
-            global.quit_flag = PJ_TRUE;
-        }
+        if (dur > 30) { ringer::global.quit_flag = PJ_TRUE; }
     }
 
-    pj_thread_join(global.thread);
+    pj_thread_join(ringer::global.thread);
 
 #else
     puts("\nPress Ctrl-C to quit\n");
     for (;;) {
         pj_time_val delay = {0, 0};
-        pjsip_endpt_handle_events(global.endpt, &delay);
+        pjsip_endpt_handle_events(ringer::global.endpt, &delay);
     }
 #endif
 
-    destroy_stack();
+    ringer::destroy_stack();
 
     ringer::logger::info("done");
     return 0;

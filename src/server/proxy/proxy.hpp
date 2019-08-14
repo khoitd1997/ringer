@@ -6,6 +6,8 @@ extern "C" {
 #include "pjsip.h"
 }
 
+namespace ringer {
+
 /* Options */
 struct global_struct {
     pj_caching_pool cp;
@@ -75,3 +77,4 @@ void proxy_postprocess(pjsip_tx_data *tdata);
 
 /* Destroy stack */
 void destroy_stack(void);
+}  // namespace ringer

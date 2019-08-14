@@ -2,6 +2,9 @@
 
 #include <iostream>
 
+#include "ringer_logger.hpp"
+
+namespace ringer {
 #define THIS_FILE "proxy.cpp"
 
 global_struct global;
@@ -416,7 +419,8 @@ pj_status_t proxy_process_routing(pjsip_tx_data *tdata) {
 void proxy_postprocess(pjsip_tx_data *tdata) {
     /* Optionally record-route */
     // if (global.record_route) {
-    std::cout << "Post processing messages" << std::endl;
+
+    ringer::logger::info("post processing messages");
     char                      uribuf[128];
     pj_str_t                  uri;
     const pj_str_t            H_RR = {"Record-Route", 12};
@@ -488,3 +492,4 @@ void destroy_stack(void) {
 
     pj_shutdown();
 }
+}  // namespace ringer
