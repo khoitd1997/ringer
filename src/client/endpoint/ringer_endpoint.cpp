@@ -1,6 +1,9 @@
 #include "ringer_endpoint.hpp"
 
 namespace ringer {
+namespace {
+const auto kProxyServerAddr = "sip:192.168.1.141";
+}
 RingerEndpoint& RingerEndpoint::getInstance(const int port, const std::string& publicAddr) {
     static RingerEndpoint singleTon{port, publicAddr};
     return singleTon;
@@ -13,7 +16,10 @@ RingerEndpoint::RingerEndpoint(const int port, const std::string& publicAddr) {
     ep_.libCreate();
 
     pj::EpConfig epCfg;
-    epCfg.logConfig.level = 2;
+
+    epCfg.uaConfig.outboundProxies = {kProxyServerAddr};
+    epCfg.logConfig.level          = 2;
+
     ep_.libInit(epCfg);
 
     pj::TransportConfig tcfg;

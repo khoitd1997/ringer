@@ -20,7 +20,7 @@
 int main() {
     auto &ep = ringer::RingerEndpoint::getInstance(5061, "localhost");
     try {
-        ringer::logger::info("caller started");
+        ringer::logger::init("caller");
 
         // Add account
         ringer::RingerAccount acc{"caller", "pjsip.org"};
@@ -33,7 +33,7 @@ int main() {
         pj::CallOpParam prm(true);
         prm.opt.audioCount = 1;
         prm.opt.videoCount = 0;
-        call->makeCall("sip:answerrer@localhost:5060", prm);
+        call->makeCall("sip:answerrer@randomDomain:5060", prm);
 
         // AudioMediaRecorder amr;
         // amr.createRecorder("./recorder_test_output.wav");

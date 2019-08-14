@@ -22,7 +22,7 @@ void RingerCall::onCallState(pj::OnCallStateParam &prm) {
     PJ_UNUSED_ARG(prm);
 
     const auto ci = this->getInfo();
-    logger::info(roleName_, "*** Caller Call: " + ci.remoteUri + " [" + ci.stateText + "]");
+    logger::info("*** Caller Call: " + ci.remoteUri + " [" + ci.stateText + "]");
 
     if (ci.state == PJSIP_INV_STATE_DISCONNECTED) {
         // myAcc->removeCall(this);
@@ -32,7 +32,7 @@ void RingerCall::onCallState(pj::OnCallStateParam &prm) {
 }
 
 void RingerCall::onCallMediaState(pj::OnCallMediaStateParam &prm) {
-    logger::info(roleName_, "media state change");
+    logger::info("media state change");
     PJ_UNUSED_ARG(prm);
 
     pj::CallInfo ci = getInfo();
@@ -46,7 +46,7 @@ void RingerCall::onCallMediaState(pj::OnCallMediaStateParam &prm) {
         // const auto medInfo = audMed.getPortInfo();
         // std::cout << "med info: " << medInfo.name << " " << medInfo.portId << std::endl;
     } catch (...) {
-        logger::error(roleName_, "failed to get audio media");
+        logger::error("failed to get audio media");
         return;
     }
 
@@ -56,7 +56,7 @@ void RingerCall::onCallMediaState(pj::OnCallMediaStateParam &prm) {
             try {
                 wav_player->createPlayer(testWavFile, 0);
             } catch (...) {
-                logger::error(roleName_, "failed opening wav file");
+                logger::error("failed opening wav file");
                 delete wav_player;
                 wav_player = NULL;
             }
@@ -70,13 +70,13 @@ void RingerCall::onCallMediaState(pj::OnCallMediaStateParam &prm) {
 
         wav_player->startTransmit(audMed);
 
-        logger::info(roleName_, "say something NOW");
+        logger::info("say something NOW");
 
         pj_thread_sleep(30000);
     } else {
         audMed.startTransmit(pj::Endpoint::instance().audDevManager().getPlaybackDevMedia());
     }
-    logger::info(roleName_, "finishing onCallMediaState");
+    logger::info("finishing onCallMediaState");
 }
 
 void RingerCall::onCallTransferRequest(pj::OnCallTransferRequestParam &prm) {

@@ -13,7 +13,11 @@
 namespace ringer {
 RingerAccount::RingerAccount(const std::string &name, const std::string &address) {
     pj::AccountConfig accConfig;
-    accConfig.idUri                  = "sip:" + name + "@" + address;
+    accConfig.idUri = "sip:" + name + "@" + address;  // sip:account@serviceprovider
+
+    // "sip:serviceprovider"
+    // sip:<proxy>, where <proxy> is the FQDN or numeric IP
+    // address of the next-hop proxy
     accConfig.regConfig.registrarUri = "sip:sip.pjsip.org";
     accConfig.sipConfig.authCreds.push_back(pj::AuthCredInfo("digest", "*", name, 0, name));
 

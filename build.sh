@@ -9,9 +9,9 @@ mkdir -p build
 cd build
 cmake ..
 cmake --build .
+cd bin
 cp ${currDir}/wav/sine_test.wav ${srcDir}/build/bin
-
-cd ${srcDir}/build/bin
-# ./answerrer > /dev/null 2>&1 &
-./answerrer &
+./proxy_server &
+# # ./answerrer > /dev/null 2>&1 &
+# ./answerrer &
 ./caller

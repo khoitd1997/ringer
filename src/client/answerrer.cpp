@@ -18,6 +18,7 @@
 
 int main() {
     try {
+        ringer::logger::init("answerrer");
         auto& ep = ringer::RingerEndpoint::getInstance(5060, "localhost");
 
         ringer::logger::info("answerrer started");
