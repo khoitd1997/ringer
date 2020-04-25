@@ -13,5 +13,5 @@ cd bin
 cp ${currDir}/wav/sine_test.wav ${srcDir}/build/bin
 ./proxy_server &
 # # ./answerrer > /dev/null 2>&1 &
-# ./answerrer &
+./answerrer &
 ./caller

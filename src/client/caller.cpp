@@ -33,7 +33,8 @@ int main() {
         pj::CallOpParam prm(true);
         prm.opt.audioCount = 1;
         prm.opt.videoCount = 0;
-        call->makeCall("sip:answerrer@randomDomain:5060", prm);
+        // call->makeCall("sip:answerrer@ringer_sip:5062", prm);
+        call->makeCall("sip:answerrer@something:5062", prm);
 
         // AudioMediaRecorder amr;
         // amr.createRecorder("./recorder_test_output.wav");

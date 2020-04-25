@@ -1,8 +1,9 @@
-#include "proxy.hpp"
+#include "ringer_proxy.hpp"
 
 #include <iostream>
 
 #include "ringer_logger.hpp"
+#include "ringer_pjsip_type_util.hpp"
 
 namespace ringer {
 #define THIS_FILE "proxy.cpp"
@@ -373,6 +374,7 @@ pj_status_t proxy_process_routing(pjsip_tx_data *tdata) {
          */
         uri = (pjsip_sip_uri *)pjsip_uri_get_uri(&hroute->name_addr);
         if (uri->lr_param == 0) {
+            ringer::logger::info("this is strict route");
             /* Yes this is strict route, so:
              * - replace req URI with the URI in Route header,
              * - remove the Route header,
@@ -415,73 +417,13 @@ pj_status_t proxy_process_routing(pjsip_tx_data *tdata) {
     return PJ_SUCCESS;
 }
 
-/* Postprocess the request before forwarding it */
-void proxy_postprocess(pjsip_tx_data *tdata) {
-    /* Optionally record-route */
-    // if (global.record_route) {
-
-    ringer::logger::info("post processing messages");
-    char                      uribuf[128];
-    pj_str_t                  uri;
-    const pj_str_t            H_RR = {"Record-Route", 12};
-    pjsip_generic_string_hdr *rr;
-
-    pj_ansi_snprintf(uribuf,
-                     sizeof(uribuf),
-                     "<sip:%.*s:%d;lr>",
-                     (int)global.name[0].host.slen,
-                     global.name[0].host.ptr,
-                     global.name[0].port);
-    uri = pj_str(uribuf);
-    rr  = pjsip_generic_string_hdr_create(tdata->pool, &H_RR, &uri);
-    pjsip_msg_insert_first_hdr(tdata->msg, (pjsip_hdr *)rr);
-    // }
-}
-
 /* Calculate new target for the request */
 pj_status_t proxy_calculate_target(pjsip_rx_data *rdata, pjsip_tx_data *tdata) {
-    pjsip_sip_uri *target;
-
     /* RFC 3261 Section 16.5 Determining Request Targets */
-
-    target = (pjsip_sip_uri *)tdata->msg->line.req.uri;
-
-    /* If the Request-URI of the request contains an maddr parameter, the
-     * Request-URI MUST be placed into the target set as the only target
-     * URI, and the proxy MUST proceed to Section 16.6.
-     */
-    if (target->maddr_param.slen) {
-        proxy_postprocess(tdata);
-        return PJ_SUCCESS;
-    }
-
-    /* If the domain of the Request-URI indicates a domain this element is
-     * not responsible for, the Request-URI MUST be placed into the target
-     * set as the only target, and the element MUST proceed to the task of
-     * Request Forwarding (Section 16.6).
-     */
-    // if (!is_uri_local(target)) {
-    proxy_postprocess(tdata);
+    auto target = (pjsip_sip_uri *)tdata->msg->line.req.uri;
+    if (pjStrToStr(target->user) == "answerrer") { target->host = {"192.168.1.169", 13}; }
+    ringer::logger::info("target is " + pjStrToStr(target->user));
     return PJ_SUCCESS;
-    // }
-
-    /* If the target set for the request has not been predetermined as
-     * described above, this implies that the element is responsible for the
-     * domain in the Request-URI, and the element MAY use whatever mechanism
-     * it desires to determine where to send the request.
-     */
-
-    /* We're not interested to receive request destined to us, so
-     * respond with 404/Not Found (only if request is not ACK!).
-     */
-    if (rdata->msg_info.msg->line.req.method.id != PJSIP_ACK_METHOD) {
-        pjsip_endpt_respond_stateless(global.endpt, rdata, PJSIP_SC_NOT_FOUND, NULL, NULL, NULL);
-    }
-
-    /* Delete the request since we're not forwarding it */
-    pjsip_tx_data_dec_ref(tdata);
-
-    return PJSIP_ERRNO_FROM_SIP_STATUS(PJSIP_SC_NOT_FOUND);
 }
 
 /* Destroy stack */

@@ -1,3 +1,3 @@
-add_library(proxy proxy.cpp)
-target_include_directories(proxy PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
-target_link_libraries(proxy PRIVATE ringer_logger)
+add_library(ringer_proxy ringer_proxy.cpp)
+target_include_directories(ringer_proxy PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+target_link_libraries(ringer_proxy PRIVATE ringer_logger ringer_pjsip_util)

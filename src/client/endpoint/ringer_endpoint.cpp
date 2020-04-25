@@ -2,7 +2,8 @@
 
 namespace ringer {
 namespace {
-const auto kProxyServerAddr = "sip:192.168.1.141";
+const auto kProxyServerAddr =
+    "sip:192.168.1.169";  // will be filled in by the boostrap process later
 }
 RingerEndpoint& RingerEndpoint::getInstance(const int port, const std::string& publicAddr) {
     static RingerEndpoint singleTon{port, publicAddr};

@@ -72,9 +72,6 @@ pj_status_t proxy_process_routing(pjsip_tx_data *tdata);
 
 pj_status_t proxy_calculate_target(pjsip_rx_data *rdata, pjsip_tx_data *tdata);
 
-/* Postprocess the request before forwarding it */
-void proxy_postprocess(pjsip_tx_data *tdata);
-
 /* Destroy stack */
 void destroy_stack(void);
 }  // namespace ringer

@@ -19,11 +19,11 @@
 int main() {
     try {
         ringer::logger::init("answerrer");
-        auto& ep = ringer::RingerEndpoint::getInstance(5060, "localhost");
+        auto& ep = ringer::RingerEndpoint::getInstance(5062, "192.168.1.169");
 
         ringer::logger::info("answerrer started");
 
-        ringer::RingerAccount acc{"answerrer", "localhost"};
+        ringer::RingerAccount acc{"answerrer", "192.168.1.169"};
         ringer::logger::info("*** Answerrer Waiting ***");
 
         pj_thread_sleep(10000);

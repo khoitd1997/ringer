@@ -7,7 +7,13 @@
 
 /* Common proxy functions */
 #define STATEFUL 0
-#include "proxy.hpp"
+#include "ringer_proxy.hpp"
+
+/* Callback to be called to handle outgoing requests. */
+static pj_bool_t on_tx_request(pjsip_tx_data *rdata) { ringer::logger::info("Got tx req"); }
+
+/* Callback to be called to handle outgoing response. */
+static pj_bool_t on_tx_response(pjsip_tx_data *rdata) { ringer::logger::info("Got tx resp"); }
 
 /* Callback to be called to handle incoming requests. */
 static pj_bool_t on_rx_request(pjsip_rx_data *rdata);
@@ -28,9 +34,13 @@ static pj_status_t init_stateless_proxy(void) {
         NULL,                              /* unload()		*/
         &on_rx_request,                    /* on_rx_request()	*/
         &on_rx_response,                   /* on_rx_response()	*/
-        NULL,                              /* on_tx_request.	*/
-        NULL,                              /* on_tx_response()	*/
-        NULL,                              /* on_tsx_state()	*/
+
+        NULL,
+        NULL,
+        // &on_tx_request,                    /* on_tx_request.	*/
+        // &on_tx_response,                   /* on_tx_response()	*/
+
+        NULL, /* on_tsx_state()	*/
     };
 
     pj_status_t status;
@@ -109,6 +119,7 @@ static pj_bool_t on_rx_response(pjsip_rx_data *rdata) {
         pjsip_tx_data_dec_ref(tdata);
         return PJ_TRUE;
     }
+    // ringer::logger::info("rx resp: " + std::to_string((hvia->sent_by).port));
 
     /* Calculate the address to forward the response */
     pj_bzero(&res_addr, sizeof(res_addr));

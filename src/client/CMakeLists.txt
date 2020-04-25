@@ -1,4 +1,3 @@
-add_subdirectory(pjsip_util)
 add_subdirectory(endpoint)
 add_subdirectory(account)
 add_subdirectory(call)
